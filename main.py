@@ -18,14 +18,14 @@ class Food:
 
 class Creature:
 	def __init__(self):
-		self.x = random.randint(100, 1820);
+		self.x = random.randint(100, 1820)
 		self.y = random.randint(100, 980)
 		self.dx, self.dy = normalize((random.random() - 0.5, random.random() - 0.5))
 		self.color = (255, 255, 255)
 
 		self.energy = 100
 
-		self.base_speed, self.base_sense = [1, 30]
+		self.base_speed, self.base_sense = [1, 300]
 		self.gene_speed, self.gene_sense = [1, 1]
 
 		self.new_direction_timer = 0
@@ -140,6 +140,10 @@ while running:
 
 
 
+# TODO: smooth motion?
+# TODO: destroy food on collide
+# TODO: genes + reproduction
+# TODO: energy costs
 
 
 
