@@ -5,28 +5,32 @@ import time
 
 import csv
 
+
+filename = 'ian2'
+
 generation_length = 3000
-delay = 1000
+delay = 300
 
 amount_food = 100
-amount_creatures = 20
+amount_creatures = 10
 
 creature_death_percentile = 0.5
 
-mutation_const = 0.05
+mutation_const = 0.007
 
 
 
 class Food:
 	def __init__(self):
-		self.x = random.randint(100, 1820)
-		self.y = random.randint(100, 980)
+		self.x = 800*random.random()
+		self.y = 800*random.random()
 		self.color = (255, 0, 0)
 
-		self.energy = 1
+		self.energy = 0.5
 
 	def draw(self):
-		pygame.draw.circle(canvas, self.color, (self.x, self.y), 3)
+		pygame.draw.circle(canvas, self.color, (self.x, self.y), 5)
+		# pygame.draw.rect(canvas, self.color, (self.x, self.y, 5, 5))
 
 
 class Creature:
@@ -80,7 +84,7 @@ class Creature:
 
 	def draw(self):
 		pygame.draw.rect(canvas, self.color, (self.x - 5, self.y - 5, 10, 10))
-		pygame.draw.circle(canvas, (70, 70, 70), (self.x, self.y), self.get_sense(), width=1)
+		pygame.draw.circle(canvas, (255,255,255), (self.x, self.y), self.get_sense(), width=1)
 
 	def sense_food(self):
 
@@ -165,11 +169,14 @@ def start_simulation():
 		foods.append(Food())
 
 	for i in range(amount_creatures):
-		creatures.append(Creature())
+		creatures.append(Creature((1, 1)))
+		# creatures.append(Creature((5*random_signed()+1, 5*random_signed()+1)))
+
+	averages()
 
 	# creatures.append(Creature((545.1610324170359,633.7939459012329)))
 
-def averages():
+def averages(reproduced=len(creatures), survived=0, died=0):
 	energy = 0
 	speed = 0
 	sense = 0
@@ -185,10 +192,10 @@ def averages():
 
 
 
-	with open('logs/conformity.csv', 'a', newline='') as file:
+	with open(f'logs/{filename}.csv', 'a', newline='') as file:
 
 		writer = csv.writer(file)
-		writer.writerow([generation, amount_creatures, energy, speed, sense])
+		writer.writerow([generation, amount_creatures, energy, speed, sense, reproduced, survived, died])
 
 
 
@@ -237,6 +244,8 @@ def reproduce_by_food():
 	foods = []
 	for i in range(amount_food):
 		foods.append(Food())
+		# print(food.x, food.y)
+
 
 	creatures.sort(key=lambda obj: obj.energy, reverse=True)
 
@@ -253,8 +262,8 @@ def reproduce_by_food():
 
 			for j in range(kids):
 
-				child_speed = max(parent_speed + mutation_const * random_signed(), min_value)
-				child_sense =  max(parent_sense + mutation_const * random_signed(), min_value)
+				child_speed = max(parent_speed * (mutation_const * random_signed()+1), min_value)
+				child_sense =  max(parent_sense * (mutation_const * random_signed()+1), min_value)
 
 				new_creatures.append(
 					Creature((child_speed, child_sense))
@@ -272,6 +281,8 @@ def reproduce_by_food():
 		else:
 			died += 1
 
+	averages(reproduced, survived, died)
+
 	print(f'reproduced: {reproduced}\tsurvived: {survived}\tdied: {died}')
 	# amount_food -= 1
 	creatures = new_creatures
@@ -279,10 +290,11 @@ def reproduce_by_food():
 
 
 
-with open('logs/conformity.csv', 'w', newline='') as file:
+with open(f'logs/{filename}.csv', 'w', newline='') as file:
 
 	writer = csv.writer(file)
-	writer.writerow(['generation', 'amount_creatures', 'average_energy', 'average_speed', 'average_sense'])
+	writer.writerow(['generation', 'amount_creatures', 'average_energy', 'average_speed', 'average_sense',
+					 'reproduced', 'survived', 'died'])
 
 
 
@@ -290,13 +302,13 @@ with open('logs/conformity.csv', 'w', newline='') as file:
 # print(normalize((random.random() - 0.5, random.random() - 0.5)))
 
 pygame.init()
-canvas = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+canvas = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
 info = pygame.display.Info()
 screen_width, screen_height = info.current_w, info.current_h
 
 clock = pygame.time.Clock()
 dt = clock.tick(delay)
-dtfc = 1
+dtfc = dt
 
 start_simulation()
 
@@ -336,11 +348,13 @@ while running:
 
 	# print(f'mod {creatures[-1].energy} vs. {creatures[0].energy}')
 
+	# print(len(foods))
 
+	# print(foods[0].x, foods[0].y)
 	if age % generation_length == generation_length-1 or len(foods) == 0:
 		age = 0
-		averages()
 		reproduce_by_food()
+
 		generation += 1
 		print(f'\n GENERATION {generation}')
 
